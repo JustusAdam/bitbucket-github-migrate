@@ -19,6 +19,7 @@ import           Data.Time
 import           GHC.Generics              (Generic)
 import           Network.HTTP.Types.Status (ok200)
 import           Network.Wreq
+import           Util
 
 
 bitbucketBaseUrl :: String
@@ -87,7 +88,7 @@ data IssueLinks = IssueLinks
 
 instance ToJSON IssueLinks where
     toJSON = genericToJSON jsonOptions
-    
+
 instance FromJSON IssueLinks where
     parseJSON = genericParseJSON jsonOptions
 
@@ -115,8 +116,8 @@ instance ToJSON MarkupContent where
 
 instance FromJSON MarkupContent where
     parseJSON = genericParseJSON $ withDropPrefix "ic" jsonOptions
-    
-    
+
+
 data User = User
     { username    :: Text
     , displayName :: Text
@@ -144,24 +145,24 @@ instance FromJSON a => FromJSON (PagedRequest a) where
 
 
 data CommentShortInfo = CommentShortInfo
-    { commInfoId :: Integer
-    , commInfoLinks :: SelfOnlyLink 
+    { commInfoId    :: Integer
+    , commInfoLinks :: SelfOnlyLink
     } deriving (Eq, Ord, Show, Generic)
 
 instance ToJSON CommentShortInfo where
-    toJSON = genericToJSON $ withDropPrefix "commeInfo" jsonOptions 
+    toJSON = genericToJSON $ withDropPrefix "commeInfo" jsonOptions
 
 instance FromJSON CommentShortInfo where
     parseJSON = genericParseJSON $ withDropPrefix "commInfo" jsonOptions
 
 
 data Comment = Comment
-    { commentLinks :: CommentLinks
-    , commentContent :: MarkupContent
+    { commentLinks     :: CommentLinks
+    , commentContent   :: MarkupContent
     , commentCreatedOn :: ZonedTime
-    , commentUser :: User
+    , commentUser      :: User
     , commentUpdatedOn :: Maybe ZonedTime
-    , commentIssue :: IssueShortInfo 
+    , commentIssue     :: IssueShortInfo
     } deriving (Show, Generic)
 
 instance ToJSON Comment where
@@ -184,9 +185,9 @@ instance FromJSON CommentLinks where
 
 
 data IssueShortInfo = IssueShortInfo
-    { isiLinks :: SelfOnlyLink
-    , isiTitle :: Text
-    , isiId :: Integer
+    { isiLinks      :: SelfOnlyLink
+    , isiTitle      :: Text
+    , isiId         :: Integer
     , isiRepository :: RepositoryShortInfo
     } deriving (Show, Generic)
 
@@ -209,11 +210,11 @@ instance FromJSON SelfOnlyLink where
 
 
 data RepositoryShortInfo = RepositoryShortInfo
-    { rsiLinks :: RepositoryShortInfoLinks
-    , rsiType :: Text
-    , rsiName :: Text
+    { rsiLinks    :: RepositoryShortInfoLinks
+    , rsiType     :: Text
+    , rsiName     :: Text
     , rsiFullName :: Text
-    , rsiUUID :: Text
+    , rsiUUID     :: Text
     } deriving (Eq, Ord, Show, Generic)
 
 instance ToJSON RepositoryShortInfo where
@@ -224,34 +225,22 @@ instance FromJSON RepositoryShortInfo where
 
 
 data RepositoryShortInfoLinks = RepositoryShortInfoLinks
-    { rsilSelf :: SimpleLink
-    , rsilHtml :: SimpleLink
+    { rsilSelf   :: SimpleLink
+    , rsilHtml   :: SimpleLink
     , rsilAvatar :: SimpleLink
     } deriving (Eq, Ord, Show, Generic)
 
 instance ToJSON RepositoryShortInfoLinks where
     toJSON = genericToJSON $ withDropPrefix "rsil" jsonOptions
-    
+
 instance FromJSON RepositoryShortInfoLinks where
     parseJSON = genericParseJSON $ withDropPrefix "rsil" jsonOptions
-
-
-jsonOptions = defaultOptions { fieldLabelModifier = camelTo '_' . filter (/= '_') }
-
-
-withDropPrefix prefix o = o { fieldLabelModifier = (fieldLabelModifier o) . (fromMaybe <$> Prelude.id <*> stripPrefix prefix) }
-
-
-newtype TypeTag a b = TypeTag { unTTag :: b }
-
-toTag = TypeTag
-
 
 type ReqUrl a = TypeTag a String
 type APIVersion a = TypeTag a String
 
 
-class (ToJSON result, FromJSON result) => BitbucketRequestable reqData result where
+class FromJSON result => BitbucketRequestable reqData result where
     getUrl :: reqData -> ReqUrl result
     apiVersion :: reqData -> APIVersion result
 
@@ -270,5 +259,5 @@ bitbucketGETPaged reqData =
             Right r -> if r ^. responseStatus == ok200
                             then eitherDecode $ r ^. responseBody
                             else Left $ BS.unpack $ r ^. responseStatus . statusMessage
-    where 
+    where
         url = bitbucketBaseUrl <> unTTag (apiVersion reqData :: APIVersion result) <> "/" <> unTTag (getUrl reqData :: ReqUrl result)

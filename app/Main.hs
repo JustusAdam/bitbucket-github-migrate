@@ -16,20 +16,20 @@ testJsonParse = do
         print
         (const $ return ())
         decoded
-    
+
     commentsFile <- B.readFile "comments.json"
-    
+
     either
         print
         (const $ return ())
         (eitherDecode commentsFile :: Either String (PagedRequest CommentShortInfo))
-    
+
     commentFile <- B.readFile "comment.json"
-    
+
     either
         print
         print
         (eitherDecode commentFile :: Either String Comment)
-    
+
 
 main = testJsonParse
