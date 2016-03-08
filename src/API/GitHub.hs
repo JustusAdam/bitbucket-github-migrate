@@ -25,10 +25,6 @@ import           Util
 type PushUrl a = TypeTag a String
 
 
-class ToJSON payload => GitHubPostable inData payload where
-    url :: inData -> PushUrl payload
-
-
 data WritableIssue = WritableIssue
     { wIssueTitle     :: Text
     , wIssueBody      :: Text
