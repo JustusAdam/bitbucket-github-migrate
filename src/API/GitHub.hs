@@ -14,8 +14,6 @@ import           Data.Aeson.Types
 import qualified Data.ByteString.Char8     as BS
 import           Data.Maybe                (fromMaybe)
 import           Data.Text                 (Text, unpack)
-import           Data.Time
-import           GHC.Generics              (Generic)
 import           Network.HTTP.Types.Status (ok200)
 import           Network.Wreq
 import           Util

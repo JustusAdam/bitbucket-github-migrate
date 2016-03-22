@@ -26,13 +26,16 @@ import           Util
 
 data Transfer d r w = Transfer
     { tidentifier :: String
-    , tacquire :: TransferMonad () d ()
-    , tread    :: TransferMonad d r ()
-    , twrite   :: TransferMonad (d, r) w ()
+    , tacquire    :: TransferMonad () d ()
+    , tread       :: TransferMonad d r ()
+    , twrite      :: TransferMonad (d, r) w ()
     }
 
 
-data TransferWrapper = forall d r w. (Serialize d, Serialize r, Serialize w, Default d, Default r, Default w) => TransferWrapper (Transfer d r w)
+data TransferWrapper
+    = forall d r w. ( Serialize d, Serialize r, Serialize w
+                    , Default d, Default r, Default w)
+    => TransferWrapper (Transfer d r w)
 
 
 transfers :: [TransferWrapper]
@@ -77,7 +80,7 @@ continueTransfer Transfer{twrite} (Writing d r w) lastErr = do
         case err of
             Just e -> Writing d r newState
             Nothing -> Finished d r newState
-continueTransfer _ s e = return (s, e)
+continueTransfer _ s e = return (s, Nothing)
 
 
 execTransfer
@@ -92,7 +95,8 @@ execTransfer baseDirectory t = do
         Right (prevErr, state') -> execTransferOn baseDirectory t prevErr state'
 
 
-execTransferOn :: (Default d, Default r, Default w, Serialize d, Serialize r, Serialize w)
+execTransferOn
+    :: (Default d, Default r, Default w, Serialize d, Serialize r, Serialize w)
     => String
     -> Transfer d r w
     -> Maybe TransactionError
