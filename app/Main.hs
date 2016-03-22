@@ -1,6 +1,7 @@
 {-# LANGUAGE NamedFieldPuns #-}
 module Main where
 
+import ClassyPrelude
 import           API.Bitbucket
 import           Data.Aeson
 import qualified Data.ByteString.Lazy as B

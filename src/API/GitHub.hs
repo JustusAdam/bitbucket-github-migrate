@@ -6,14 +6,13 @@
 module API.GitHub where
 
 
-import           Control.Exception         (SomeException, try)
+import           ClassyPrelude
+import           Control.Exception         (SomeException)
 import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Types
 import qualified Data.ByteString.Char8     as BS
-import           Data.List                 (stripPrefix)
 import           Data.Maybe                (fromMaybe)
-import           Data.Monoid               ((<>))
 import           Data.Text                 (Text, unpack)
 import           Data.Time
 import           GHC.Generics              (Generic)
@@ -35,4 +34,3 @@ data WritableIssue = WritableIssue
 
 instance ToJSON WritableIssue where
     toJSON = genericToJSON $ withDropPrefix "wIssue" jsonOptions
-

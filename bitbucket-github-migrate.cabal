@@ -31,7 +31,13 @@ library
                      , directory
                      , cereal
                      , data-default
+                     , transformers
+                     , either
+                     , mtl
+                     , lifted-base
+                     , classy-prelude
   default-language:    Haskell2010
+  extensions:          NoImplicitPrelude
 
 executable bitbucket-github-migrate-exe
   hs-source-dirs:      app
@@ -42,6 +48,7 @@ executable bitbucket-github-migrate-exe
                      , aeson
                      , bytestring
   default-language:    Haskell2010
+  extensions:          NoImplicitPrelude
 
 test-suite bitbucket-github-migrate-test
   type:                exitcode-stdio-1.0
@@ -51,6 +58,7 @@ test-suite bitbucket-github-migrate-test
                      , bitbucket-github-migrate
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
+  extensions:          NoImplicitPrelude
 
 source-repository head
   type:     git
