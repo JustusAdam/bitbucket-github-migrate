@@ -1,16 +1,14 @@
 {-# LANGUAGE NamedFieldPuns #-}
 module Main where
 
-import ClassyPrelude
 import           API.Bitbucket
+import           ClassyPrelude
 import           Data.Aeson
-import qualified Data.ByteString.Lazy as B
-import           Data.Foldable        (for_)
-import           Text.Printf
 
 
+testJsonParse :: IO ()
 testJsonParse = do
-    file <- B.readFile "issues.json"
+    file <- readFile "issues.json"
     let decoded = eitherDecode file :: Either String (PagedRequest Issue)
 
     either
@@ -18,14 +16,14 @@ testJsonParse = do
         (const $ return ())
         decoded
 
-    commentsFile <- B.readFile "comments.json"
+    commentsFile <- readFile "comments.json"
 
     either
         print
         (const $ return ())
         (eitherDecode commentsFile :: Either String (PagedRequest CommentShortInfo))
 
-    commentFile <- B.readFile "comment.json"
+    commentFile <- readFile "comment.json"
 
     either
         print
@@ -33,4 +31,5 @@ testJsonParse = do
         (eitherDecode commentFile :: Either String Comment)
 
 
+main :: IO ()
 main = testJsonParse

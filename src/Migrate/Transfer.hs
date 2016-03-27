@@ -5,23 +5,13 @@
 {-# LANGUAGE NamedFieldPuns            #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
 {-# LANGUAGE TupleSections             #-}
-module Transfer where
+module Migrate.Transfer where
 
 
-import           API.Bitbucket
-import           API.GitHub
 import           ClassyPrelude
-import           Control.Arrow             (second)
-import           Control.Monad
-import qualified Data.ByteString           as BS
 import           Data.Default
 import           Data.Serialize            as Slz
 import           Migrate.Internal.Types
-import           Network.HTTP.Types.Status
-import           Network.Wreq
-import           System.Directory
-import           System.FilePath
-import           Util
 
 
 data Transfer d r w = Transfer
@@ -33,8 +23,7 @@ data Transfer d r w = Transfer
 
 
 data TransferWrapper
-    = forall d r w. ( Serialize d, Serialize r, Serialize w
-                    , Default d, Default r, Default w)
+    = forall d r w. (Serialize d, Serialize r, Serialize w, Default d, Default r, Default w)
     => TransferWrapper (Transfer d r w)
 
 
@@ -46,11 +35,11 @@ execTransferStep :: r -> w -> Maybe TransactionError -> TransferMonad r w a -> I
 execTransferStep r w lastErr m = do
     mvar <- newMVar w
     err <- catch
-        (flip fmap
-            (runTransferMonad r mvar lastErr m)
-            $ \case
+        (fmap
+            (\case
                 Right _ -> Nothing
                 Left err -> Just err)
+            (runTransferMonad r mvar lastErr m))
         (return . Just . Unexpected . show :: SomeException -> IO (Maybe TransactionError))
     mvarContent <- readMVar mvar
     return (err, mvarContent)
@@ -62,25 +51,23 @@ continueTransfer
     -> TransferState d r w
     -> Maybe TransactionError
     -> IO (TransferState d r w, Maybe TransactionError)
-continueTransfer Transfer{tacquire} (Initializing d) lastErr = do
-    (err, newState) <- execTransferStep () d lastErr tacquire
-    return $ (, err) $
-        case err of
-            Just e -> Initializing newState
-            Nothing -> Reading d def
-continueTransfer Transfer{tread} (Reading d r) lastErr = do
-    (err, newState) <- execTransferStep d r lastErr tread
-    return $ (, err) $
-        case err of
-            Just e -> Reading d newState
-            Nothing -> Writing d newState def
-continueTransfer Transfer{twrite} (Writing d r w) lastErr = do
-    (err, newState) <- execTransferStep (d, r) w lastErr twrite
-    return $ (, err) $
-        case err of
-            Just e -> Writing d r newState
-            Nothing -> Finished d r newState
-continueTransfer _ s e = return (s, Nothing)
+continueTransfer Transfer{tacquire} (Initializing d) = continueTransferInner Initializing (flip Reading def) () d tacquire
+continueTransfer Transfer{tread} (Reading d r)       = continueTransferInner (Reading d) (flip (Writing d) def) d r tread
+continueTransfer Transfer{twrite} (Writing d r w)    = continueTransferInner (Writing d r) (Finished d r) (d, r) w twrite
+continueTransfer _ s = const $ return (s, Nothing)
+
+
+continueTransferInner
+    :: (state -> state')
+    -> (state -> state')
+    -> readable
+    -> state
+    -> TransferMonad readable state ignored
+    -> Maybe TransactionError
+    -> IO (state', Maybe TransactionError)
+continueTransferInner onError onSuccess r w f lastErr =
+    (\(err, newState) -> ((if isJust err then onError else onSuccess) newState , err))
+    <$> execTransferStep r w lastErr f
 
 
 execTransfer
@@ -106,9 +93,7 @@ execTransferOn _ _ _ Finished{} = return Nothing
 execTransferOn baseDirectory t@Transfer{tidentifier} prevErr state = do
     (newState, err) <- continueTransfer t state prevErr
     writeFile (baseDirectory </> tidentifier <.> "log") $ encode (err, newState)
-    case err of
-        Nothing -> execTransferOn baseDirectory t err newState
-        Just _ -> return err
+    maybe (execTransferOn baseDirectory t err newState) (return . return) err
 
 
 runTransferWrapper :: String -> TransferWrapper -> IO (Maybe TransactionError)
@@ -121,6 +106,4 @@ runTransfers dir = loop transfers
         loop [] = return Nothing
         loop (x:xs) = do
             this <- runTransferWrapper dir x
-            case this of
-                Nothing -> loop xs
-                Just _ -> return this
+            maybe (loop xs) (return . return) this
