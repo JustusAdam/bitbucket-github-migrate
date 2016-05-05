@@ -34,7 +34,7 @@ instance Serialize TransactionError where
 data TransferEnvironment env w = TransferEnvironment
     { readableEnv :: env
     , writableRef :: MVar w
-    , prevError_  :: Maybe TransactionError
+    , prevError  :: Maybe TransactionError
     }
 
 
@@ -92,4 +92,4 @@ safeFail = TransferMonad . throwE
 
 
 getPreviousError :: TransferMonad r w (Maybe TransactionError)
-getPreviousError = TransferMonad $ prevError_ <$> lift ask
+getPreviousError = TransferMonad $ prevError <$> lift ask
