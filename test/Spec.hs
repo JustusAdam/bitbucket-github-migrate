@@ -18,8 +18,8 @@ data TypeTag a = TypeTag
 
 decodeTestingList :: [(Wrapper, String, String, String)]
 decodeTestingList =
-    [ (Wrapper (TypeTag :: TypeTag Issue), "decodes an issue", "test/issue-14.json", "https://api.github.com/JustusAdam/mustache/issues/14")
-    , (Wrapper (TypeTag :: TypeTag Repository), "decodes a repository", "test/mustache.json", "https://api.github.com/JustusAdam/mustache") ]
+    [ (Wrapper (TypeTag :: TypeTag Issue), "decodes an issue", "test/issue-14.json", "https://api.github.com/repos/JustusAdam/mustache/issues/14")
+    , (Wrapper (TypeTag :: TypeTag Repository), "decodes a repository", "test/mustache.json", "https://api.github.com/repos/JustusAdam/mustache") ]
 
 
 testOneDecode :: (Wrapper, String, FilePath, String) -> Spec
