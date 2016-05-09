@@ -1,9 +1,7 @@
 {-# LANGUAGE DeriveGeneric         #-}
-{-# LANGUAGE ExplicitForAll        #-}
 {-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE ScopedTypeVariables   #-}
 module API.GitHub where
 
 
@@ -19,9 +17,6 @@ import           Data.Time
 import           Network.HTTP.Types.Status (ok200)
 import           Network.Wreq
 import           Util
-
-
-type PushUrl a = TypeTag a String
 
 
 data WritableIssue = WritableIssue

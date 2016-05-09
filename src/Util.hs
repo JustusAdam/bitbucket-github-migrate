@@ -20,15 +20,15 @@ jsonEnumOptions = jsonOptions { allNullaryToStringTag = True }
 
 
 lcPrefixedEnumOptions :: String -> Options
-lcPrefixedEnumOptions prefix = jsonEnumOptions { constructorTagModifier = toLower . (fromMaybe <$> id <*> stripPrefix prefix) }
+lcPrefixedEnumOptions prefix = jsonEnumOptions { constructorTagModifier = toLower . (stripPrefix prefix >>= flip fromMaybe) }
 
 
 withDropPrefix :: String -> Options -> Options
-withDropPrefix prefix o = o { fieldLabelModifier = fieldLabelModifier o . (fromMaybe <$> id <*> stripPrefix prefix) }
+withDropPrefix prefix o = o { fieldLabelModifier = fieldLabelModifier o . (stripPrefix prefix >>= flip fromMaybe) }
 
 
 withDropConstructorPrefix :: String -> Options -> Options
-withDropConstructorPrefix prefix o = o { constructorTagModifier = constructorTagModifier o . (fromMaybe <$> id <*> stripPrefix prefix) }
+withDropConstructorPrefix prefix o = o { constructorTagModifier = constructorTagModifier o . (stripPrefix prefix >>= flip fromMaybe) }
 
 
 mapLeft :: (a -> c) -> Either a b -> Either c b

@@ -1,3 +1,4 @@
 .stack-work/
 dist/
 *.json
+.DS_Store
